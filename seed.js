@@ -54,12 +54,79 @@ var books_list = [
   }
 ];
 
-db.Book.remove({}, function(err, books){
+const authors_list = [
+  {
+    name: "Harper Lee",
+    alive: false
+  },
+  {
+    name: "F Scott Fitzgerald",
+    alive: false
+  },
+  {
+    name: "Victor Hugo",
+    alive: false
+  },
+  {
+    name: "Jules Verne",
+    alive: false
+  },
+  {
+    name: "Sheryl Sandberg",
+    alive: true
+  },
+  {
+    name: "Tim Ferriss",
+    alive: true
+  },
+  {
+    name: "John Steinbeck",
+    alive: false
+  },
+  {
+    name: "William Shakespeare",
+    alive: false
+  }
+];
+// (1) create all the authors in the array
+// (2) create all the books in the array
+//  (3) for each book, lookup the author's id
 
-  db.Book.create(books_list, function(err, books){
-    if (err) { return console.log(err); }
-    console.log("created", books.length, "books");
-    process.exit();
+db.Author.remove({}, function(err, authors) {
+  console.log('removed all authors');
+  db.Author.create(authors_list, function(err, authors){
+    if (err) {
+      console.log(err);
+      return;
+    }
+    console.log('recreated all authors');
+    console.log("created", authors.length, "authors");
+
+
+    db.Book.remove({}, function(err, books){
+      console.log('removed all books');
+      books_list.forEach(function (bookData) {
+        var book = new db.Book({
+          title: bookData.title,
+          image: bookData.image,
+          releaseDate: bookData.releaseDate
+        });
+        // find the id of the author using its name given in the books array
+        db.Author.findOne({name: bookData.author}, function (err, foundAuthor) {
+          console.log('found author ' + foundAuthor.name + ' for book ' + book.title);
+          if (err) {
+            console.log(err);
+            return;
+          }
+          book.author = foundAuthor;
+          book.save(function(err, savedBook){
+            if (err) {
+              return console.log(err);
+            }
+            console.log('saved ' + savedBook.title + ' by ' + foundAuthor.name);
+          });
+        });
+      });
+    });
   });
-
 });
